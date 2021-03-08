@@ -1,65 +1,60 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Input from "../components/Input";
+import Cities from "../components/Cities";
+import {useEffect, useState} from "react";
+import {getCityWeather} from "../api/api";
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+const Index = (props) => {
+    const [citiesWeather, setCitiesWeather] = useState([])
+    const readData = (value) => {
+        const cities=[];
+        value.forEach(value => {
+            getCityWeather(value).then(value1 => {
+                value1.date = new Date();
+                cities.push(value1)
+            })
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        })
+        setCitiesWeather(citiesWeather.concat(cities));
+    }
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+    useEffect(() => {
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        const readCheckOfNULL = async () => {
+            const cities = await localStorage.getItem('cities');
+            if (!cities) {
+                await localStorage.setItem('cities', JSON.stringify([]));
+            } else {
+                if (citiesWeather.length === 0) {
+                    await readData(JSON.parse(cities));
+                }
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+            }
+        }
+        readCheckOfNULL().then();
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    }, [])
+    const addCity = (value) => {
+        const cities = localStorage.getItem('cities');
+        const citiesJSON = JSON.parse(cities);
+        if (citiesJSON.find((val) => val === value)) {
+            alert('Такой город уже есть')
+            return;
+        }
+        citiesJSON.push(value);
+        localStorage.setItem('cities', JSON.stringify(citiesJSON));
+        readData([value]).then();
+    }
+
+
+    return (
+        <div>
+            <Input addCity={addCity}/>
+            <Cities cities={citiesWeather}/>
         </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+    )
 }
+
+
+
+export default Index;
